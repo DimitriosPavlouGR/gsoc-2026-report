@@ -1,4 +1,4 @@
-theme: jekyll-theme-cayman
+theme: jekyll-theme-architect
 title: GSoC 2026 - Metabolic Network Simplification & LPSolve Removal
 description: To fill
 kramdown:
