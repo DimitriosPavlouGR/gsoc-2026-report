@@ -26,7 +26,9 @@ whose points are the steady-state flux distributions of the network. Genome scal
 | [#XXX](https://github.com/GeomScale/volesti/pull/XXX) | Added scaling, and HiGHS replacing lpsolve across the LP oracles | Open |
 
 ## Summary of Contributions
-1. Replacing lpsolve with HiGHS
+### Simplification
+
+### LPSolve Removal
 
 ## Challenges
 **Working in a large codebase:** VolEsti is a template heavy library, and the LP oracles sit underneath almost everything in it. Understanding how a change would affect the other components of the library meant reading well beyond the files I was editing, since the polytope classes, the random walks and the volume algorithms all reach the oracles indirectly.
