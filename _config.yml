@@ -1,4 +1,4 @@
-theme: jekyll-theme-midnight
+theme: jekyll-theme-slate
 title: GSoC 2026 - Metabolic Network Simplification & LPSolve Removal
 description: Preprocessing metabolic networks and migrating the LP oracles to HiGHS
 kramdown:
