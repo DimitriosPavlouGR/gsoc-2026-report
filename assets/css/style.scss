@@ -1,5 +1,8 @@
+---
+---
+@import "{{ site.theme }}";
+
 #main-content p, #main-content li {
   text-align: justify;
   hyphens: auto;
-  -webkit-hyphens: auto;
 }
