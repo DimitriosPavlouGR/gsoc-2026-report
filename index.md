@@ -44,6 +44,12 @@ The second step was updating the oracles. Each oracle builds a model, solves it,
 |`intersect_double_line_Vpoly`, `intersect_line_zono` | both intersection of a line with a V-polytope or a zonotope |
 |`PointInIntersection` |a point common to two V-polytopes |
 
+```cpp
+LPOracleOptions opts = [](Highs& highs) {
+    highs.setOptionValue("time_limit", 5.0);
+    highs.setOptionValue("solver", "simplex");
+};
+```
 ### Simplification
 
 
