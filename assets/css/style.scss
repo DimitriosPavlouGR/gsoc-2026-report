@@ -1,8 +1,9 @@
 ---
 ---
+
 @import "{{ site.theme }}";
 
-#main-content p, #main-content li {
+p, li {
   text-align: justify;
   hyphens: auto;
 }
