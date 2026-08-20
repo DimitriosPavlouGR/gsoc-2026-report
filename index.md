@@ -68,7 +68,7 @@ if (!res.is_solved) {
 }
 ```
 ### Simplification
-**A new representation:** A new class was added called `MetabolicPolytope` that stores a metabolic network in the form it naturally comes in, box bounds together with equality constraints, rather than as a single system of inequalities:
+**A new representation:** A new class called `MetabolicPolytope` was added to `include/convex_bodies/metabolic_polytope` that stores a metabolic network in the form it naturally comes in, box bounds together with equality constraints, rather than as a single system of inequalities:
 
 $$P=\{x \in \mathbb{R}^d : Sx = 0,\; b_l \leq x \leq b_u\}$$
 
@@ -84,7 +84,7 @@ class MetabolicPolytope;
 ```
 A metabolic network enters this form with `A_eq = S` and `b_eq = 0`, the steady state condition. The right hand side is kept as a vector rather than fixed to zero so that the simplification algorithm can add discovered equalities to `A_eq` when simplifying the metabolic network.
 
-**A parser for BiGG models:** Models from [BiGG](http://bigg.ucsd.edu/) are distributed as SMBL, MAT and JSON files. So a parser was added that reads a BiGG model in JSON format and turns it into a `MetabolicPolytope` using [nlohmann/json](https://github.com/nlohmann/json).
+**A parser for BiGG models:** Models from [BiGG](http://bigg.ucsd.edu/) are distributed as SMBL, MAT and JSON files. So a parser was added to `io/bigg_parser.hpp` that reads a BiGG model in JSON format and turns it into a `MetabolicPolytope` using [nlohmann/json](https://github.com/nlohmann/json).
 
 ```c++
 auto P = parse_from_json<Point>("e_coli_core.json");
