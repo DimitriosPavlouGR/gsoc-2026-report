@@ -44,14 +44,14 @@ Every sampling and volume algorithm in VolEsti sits on top of a handful of linea
 |`intersect_double_line_Vpoly`, `intersect_line_zono` | both intersection of a line with a V-polytope or a zonotope |
 |`PointInIntersection` |a point common to two V-polytopes |
 
+**Configuring the solver:** Every oracle now takes an optional `LPOracleOptions`, a callable applied to the `Highs` instance before the model is built and solved, so a caller can set a time limit, a tolerance, choose a solver, or pick any other configuration without the oracle having to expose each option itself.
+
 ```cpp
 LPOracleOptions opts = [](Highs& highs) {
     highs.setOptionValue("time_limit", 5.0);
     highs.setOptionValue("solver", "simplex");
 };
 ```
-
-**Configuring the solver:** Every oracle now takes an optional `LPOracleOptions`, a callable applied to the `Highs` instance before the model is built and solved, so a caller can set a time limit, a tolerance, choose a solver, or pick any other configuration without the oracle having to expose each option itself.
 
 **Error handling:** The oracles returned their result directly, without additional information on whether the solve had succeeded. Each one now returns a named struct carrying the result together with that information, and where the distinction is meaningful an infeasible LP is reported as a fact about the geometry rather than as a failiure.
 
