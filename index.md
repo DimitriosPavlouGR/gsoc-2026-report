@@ -32,3 +32,7 @@ whose points are the steady-state flux distributions of the network. Genome scal
 **Working in a large codebase:** VolEsti is a template heavy library, and the LP oracles sit underneath almost everything in it. Understanding how a change would affect the other components of the library meant reading well beyond the files I was editing, since the polytope classes, the random walks and the volume algorithms all reach the oracles indirectly.
 
 **Replacing lpsolve:** The lpsolve calls were spread across the oracles with no abstraction, so the migration had to preserve the behaviour of each one exactly while changing the solver underneath.
+
+**Acknowledgments**
+
+I would like to thank my mentors for their guidance and support throughout GSoC 2026.
