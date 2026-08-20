@@ -33,6 +33,6 @@ whose points are the steady-state flux distributions of the network. Genome scal
 
 **Replacing lpsolve:** The lpsolve calls were spread across the oracles with no abstraction, so the migration had to preserve the behaviour of each one exactly while changing the solver underneath.
 
-**Acknowledgments**
+## Acknowledgments
 
 I would like to thank my mentors for their guidance and support throughout GSoC 2026.
