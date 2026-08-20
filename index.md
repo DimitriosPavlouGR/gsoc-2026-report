@@ -127,6 +127,18 @@ config.verbosity = VerbosityLevel::Summary;
 
 auto res = simplify(P, config);
 ```
+
+**Scaling:** The numbers in a genome scale model do not share a magnitude
+
+A scaling is two strictly positive vectors, one factor per reaction and one per metabolite:
+
+$$A^\ast_{ij} = \frac{A_{ij}}{r_i c_j}, \quad b^\ast_{eq,i} = \frac{b_{eq,i}}{r_i},\quad x^\ast _j = c_j x_j$$
+```c++
+Scaling<Point> s;
+auto Ps = scale(P, s, MaxBoundScaling{});
+
+auto x = scale_point<Point>(x_scaled, s, false); // back to original coordinates
+```
 ## Challenges
 **Working in a large codebase:** VolEsti is a template heavy library, and the LP oracles sit underneath almost everything in it. Understanding how a change would affect the other components of the library meant reading well beyond the files I was editing, since the polytope classes, the random walks and the volume algorithms all reach the oracles indirectly.
 
