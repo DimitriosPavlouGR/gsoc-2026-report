@@ -109,6 +109,14 @@ auto res = simplify(P, config);
 ```
 The drawback of this implementation is that every LP is solved against the whole model, and up to four per reaction LPs per pass are needed, which on a genome scale network is a lot of LP calls over a system with thousands of columns and rows.
 
+**Clarkson's simplification:** The second algorithm implemented tries to address the drawbacks of the first implementation, which is that every LP is solved against every bound even though almost none of them describe the facet. It keeps two sets: an essential set `I` of bounds proved to be essential, i.e. facets, initially empty, and a set `J` of bounds whose status is still unknown, initially holding every finite bound of the input. Every reaction of the model (column) starts free, so the LPs are solved against `A_eq` and `I` alone, and `I` only ever contains genuine facets.
+
+Each iteration draws a bound from `J` and asks the same question the exhaustive method asks, but against `I` instead of the full polytope, and with a single LP call. The bound is applied to the model relaxed outwards and the reaction is optimized in its own direction. If the optimum lands within the original bound, then the facets already in `I` already imply it, and the bound is deemed redundant and dropped.
+
+Clarkson's algorithm requires an initial interior point to start. The interior point is found using the following LP:
+
+$$\max\ y \quad \text{s.t.} \quad A_{eq}x = b_{eq}, \; b_l+y \leq x \leq b_u-y,\;0 \leq y \leq 1$$
+
 ## Challenges
 **Working in a large codebase:** VolEsti is a template heavy library, and the LP oracles sit underneath almost everything in it. Understanding how a change would affect the other components of the library meant reading well beyond the files I was editing, since the polytope classes, the random walks and the volume algorithms all reach the oracles indirectly.
 
