@@ -25,10 +25,6 @@ whose points are the steady-state flux distributions of the network. Genome scal
 | [#499](https://github.com/GeomScale/volesti/pull/499) | Finished simplification, added Clarkson, BiGG parser, and exhaustive simplification | Merged |
 | [#XXX](https://github.com/GeomScale/volesti/pull/XXX) | Added scaling, and HiGHS replacing lpsolve across the LP oracles | Open |
 
-1. Added initial simplification with HiGHS: https://github.com/GeomScale/volesti/pull/493
-2. Added final simplification with Clarkson: https://github.com/GeomScale/volesti/pull/499
-3. Final PR finished simplification, and replaced lpsolve: (to be filled)
-
 ## Summary of Contributions
 1. Replacing lpsolve with HiGHS
 
