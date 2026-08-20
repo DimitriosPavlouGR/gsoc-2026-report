@@ -50,6 +50,17 @@ LPOracleOptions opts = [](Highs& highs) {
     highs.setOptionValue("solver", "simplex");
 };
 ```
+**Configuring the solver:** Every oracle now takes an optional `LPOracleOptions`, a callable applied to the `Highs` instance before the model is built and solved, so a caller can set a time limit, a tolerance, choose a solver, or pick any other configuration without the oracle having to expose each option itself.
+
+```cpp
+auto res = PointInIntersection<VT>(V1, V2, direction);
+
+if (!res.success) {
+    // the LP failed
+} else if (res.is_empty) {
+    // the polytopes do not intersect
+}
+```
 ### Simplification
 
 
