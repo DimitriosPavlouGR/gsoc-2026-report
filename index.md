@@ -68,7 +68,7 @@ if (!res.is_solved) {
 }
 ```
 ### Simplification
-**A new representation:** A new class called `MetabolicPolytope` was added to `include/convex_bodies/metabolic_polytope` that stores a metabolic network in the form it naturally comes in, box bounds together with equality constraints, rather than as a single system of inequalities:
+**A new representation:** A new class called `MetabolicPolytope` was added that stores a metabolic network in the form it naturally comes in, box bounds together with equality constraints, rather than as a single system of inequalities:
 
 $$P=\{x \in \mathbb{R}^d : Sx = 0,\; b_l \leq x \leq b_u\}$$
 
@@ -84,11 +84,13 @@ class MetabolicPolytope;
 ```
 A metabolic network enters this form with `A_eq = S` and `b_eq = 0`, the steady state condition. The right hand side is kept as a vector rather than fixed to zero so that the simplification algorithm can add discovered equalities to `A_eq` when simplifying the metabolic network.
 
-**A parser for BiGG models:** Models from [BiGG](http://bigg.ucsd.edu/) are distributed as SMBL, MAT and JSON files. So a parser was added to `io/bigg_parser.hpp` that reads a BiGG model in JSON format and turns it into a `MetabolicPolytope` using [nlohmann/json](https://github.com/nlohmann/json).
+**A parser for BiGG models:** Models from [BiGG](http://bigg.ucsd.edu/) are distributed as SMBL, MAT and JSON files. So a parser was added that reads a BiGG model in JSON format and turns it into a `MetabolicPolytope` using [nlohmann/json](https://github.com/nlohmann/json).
 
 ```c++
 auto P = parse_from_json<Point>("e_coli_core.json");
 ```
+**Simplification:** Once a model is loaded it cannot be handed to VolEsti's sampling and volume approximation implementations directly. The equalities present in the stoichiometric matrix `A_eq` coffine it to an affine subspace of $\mathbb{R}^d$, so it has not interior and zero volume in the ambient space, while VolEsti's implementations expect a full dimensional H-polytope. The models also often happen to be far more complex than they need to be, the steady state condition makes most of the inequalities redundant, which means that they are not facets of `P` and only add rows to the system that the algorithms will keep checking. Furthermore, some reactions are constrained so tightly by the network that they cannot vary at all, and so are not free variables, but hidden equalities, reducing the actual dimension of the polytope even further.
+
 
 ## Challenges
 **Working in a large codebase:** VolEsti is a template heavy library, and the LP oracles sit underneath almost everything in it. Understanding how a change would affect the other components of the library meant reading well beyond the files I was editing, since the polytope classes, the random walks and the volume algorithms all reach the oracles indirectly.
