@@ -33,9 +33,9 @@ whose points are the steady-state flux distributions of the network. Genome scal
 ### Replacing lpsolve with HiGHS
 Every sampling and volume algorithm in VolEsti sits on top of a handful of linear programming oracles located in `include/lp_oracles`, which locate an interior point, test membership, and compute where a ray leaves a body, among others. All of them called lpsolve, a solver that is no longer maintained and that loses both speed and accuracy in high dimensions.
 
-The first step was the build system. lpsolve was removed and `HiGHS.cmake` was added following the pattern the other dependencies already used, so HiGHS is fetched and built on demand and no manual installation is needed, with the examples and tests linking it through `highs::highs` target.
+**Updating the build system:** lpsolve was removed and `HiGHS.cmake` was added following the pattern the other dependencies already used, so HiGHS is fetched and built on demand and no manual installation is needed, with the examples and tests linking it through `highs::highs` target.
 
-The second step was updating the oracles. Each oracle builds a model, solves it, and reads back either the objective or the solution, so the migration was a rewrite of the model construction in HiGHS's API while preserving the behaviour of each one.
+**Updating the oracles:** Each oracle builds a model, solves it, and reads back either the objective or the solution, so the migration was a rewrite of the model construction in HiGHS's API while preserving the behaviour of each one.
 
 | Oracle | Computes |
 |`ComputeChebychevBall` | the largest ball inscribed in an H-polytope |
@@ -50,7 +50,10 @@ LPOracleOptions opts = [](Highs& highs) {
     highs.setOptionValue("solver", "simplex");
 };
 ```
+
 **Configuring the solver:** Every oracle now takes an optional `LPOracleOptions`, a callable applied to the `Highs` instance before the model is built and solved, so a caller can set a time limit, a tolerance, choose a solver, or pick any other configuration without the oracle having to expose each option itself.
+
+**Error handling:** The oracles returned their result directly, without additional information on whether the solve had succeeded. Each one now returns a named struct carrying the result together with that information, and where the distinction is meaningful an infeasible LP is reported as a fact about the geometry rather than as a failiure.
 
 ```cpp
 auto res = PointInIntersection<VT>(V1, V2, direction);
