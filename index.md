@@ -91,6 +91,23 @@ auto P = parse_from_json<Point>("e_coli_core.json");
 ```
 **Simplification:** Once a model is loaded it cannot be handed to VolEsti's sampling and volume approximation implementations directly. The equalities present in the stoichiometric matrix `A_eq` coffine it to an affine subspace of $\mathbb{R}^d$, so it has not interior and zero volume in the ambient space, while VolEsti's implementations expect a full dimensional H-polytope. The models also often happen to be far more complex than they need to be, the steady state condition makes most of the inequalities redundant, which means that they are not facets of `P` and only add rows to the system that the algorithms will keep checking. Furthermore, some reactions are constrained so tightly by the network that they cannot vary at all, and so are not free variables, but hidden equalities, reducing the actual dimension of the polytope even further.
 
+Both problems are addressed before transforming the polytope to a full dimensional polytope. Simplification relaxes the redundant bounds and moves the pinned reactions into `A_eq`, which shrinks the description of the polytope. Two algorithms have been implemented to simplify the polytopes, `exhaustive_simplification::simplify`, and `clarkson_simplification::simplify`.
+
+**Exhaustive simplification:** The first algorithm answers both questions by solving up to four LPs for every single reaction. For a reaction `k` it maximizes $x_k$ over the polytope, then moves the upper bound outwards by one and maximizes again. If the optimum does not move, then it must be that some other bound holds back the maximum $x_k$ from increasing, thus the bound describes no facet, and it is relaxed to infinity. The lower bound is tested the same way with a minimization LP.
+
+The maximization and minimization LPs also answer the second question at no extra cost. If the two optimums are close within $\epsilon$, the reaction cannot vary and is pinned.
+
+Relaxing a bound or fixing a reaction changes the polytope, therefore the remaining bounds are checked again, and can expose bounds that looked essential in previous iteration. The algorithm therefore sweeps the reactions repeatedly and stops on the first pass that changes nothing.
+
+```c++
+using namespace exhaustive_simplification;
+Config config;
+config.fix_dimensions = true;
+config.verbosity = VerbosityLevel::Summary;
+
+auto res = simplify(P, config);
+```
+The drawback of this implementation is that every LP is solved against the whole model, and up to four per reaction LPs per pass are needed, which on a genome scale network is a lot of LP calls over a system with thousands of columns and rows.
 
 ## Challenges
 **Working in a large codebase:** VolEsti is a template heavy library, and the LP oracles sit underneath almost everything in it. Understanding how a change would affect the other components of the library meant reading well beyond the files I was editing, since the polytope classes, the random walks and the volume algorithms all reach the oracles indirectly.
