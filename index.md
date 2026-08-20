@@ -39,9 +39,9 @@ Every sampling and volume algorithm in VolEsti sits on top of a handful of linea
 
 | Oracle | Computes |
 |`ComputeChebychevBall` | the largest ball inscribed in an H-polytope |
-|`memLP_Vpoly`, `memLP_Zonotope` | whether a polytope belongs to a V-polytope or a zonotope |
+|`memLP_Vpoly`, `memLP_Zonotope` | whether a point belongs to a V-polytope or a zonotope |
 |`intersect_line_Vpoly` | the point where a ray hits a V-polytope |
-|`intersect_double_line_Vpoly`, `intersect_line_zono` | both intersection of a line with a V-polytope or a zonotope |
+|`intersect_double_line_Vpoly`, `intersect_line_zono` | both intersections of a line with a V-polytope or a zonotope |
 |`PointInIntersection` |a point common to two V-polytopes |
 
 <br>
@@ -52,14 +52,16 @@ LPOracleOptions opts = [](Highs& highs) {
     highs.setOptionValue("time_limit", 5.0);
     highs.setOptionValue("solver", "simplex");
 };
+
+auto ball = ComputeChebychevBall<NT, Point>(A, b, opts);
 ```
 
-**Error handling:** The oracles returned their result directly, without additional information on whether the solve had succeeded. Each one now returns a named struct carrying the result together with that information, and where the distinction is meaningful an infeasible LP is reported as a fact about the geometry rather than as a failiure.
+**Error handling:** The oracles returned their result directly, without additional information on whether the solve had succeeded. Each one now returns a named struct carrying the result together with that information, and where the distinction is meaningful an infeasible LP is reported as a fact about the geometry rather than as a failure.
 
 ```cpp
 auto res = PointInIntersection<VT>(V1, V2, direction);
 
-if (!res.success) {
+if (!res.is_solved) {
     // the LP failed
 } else if (res.is_empty) {
     // the polytopes do not intersect
