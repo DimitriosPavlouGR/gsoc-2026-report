@@ -82,6 +82,13 @@ template
 >
 class MetabolicPolytope;
 ```
+A metabolic network enters this form with `A_eq = S` and `b_eq = 0`, the steady state condition. The right hand side is kept as a vector rather than fixed to zero so that the simplification algorithm can add discovered equalities to `A_eq` when simplifying the metabolic network.
+
+**A parser for BiGG models:** Models from [BiGG](http://bigg.ucsd.edu/) are distributed as SMBL, MAT and JSON files. So a parser was added that reads a BiGG model in JSON format and turns it into a `MetabolicPolytope` using [nlohmann/json](https://github.com/nlohmann/json).
+
+```c++
+auto P = parse_from_json<Point>("e_coli_core.json");
+```
 
 ## Challenges
 **Working in a large codebase:** VolEsti is a template heavy library, and the LP oracles sit underneath almost everything in it. Understanding how a change would affect the other components of the library meant reading well beyond the files I was editing, since the polytope classes, the random walks and the volume algorithms all reach the oracles indirectly.
