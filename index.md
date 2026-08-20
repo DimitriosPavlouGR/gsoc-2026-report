@@ -68,7 +68,20 @@ if (!res.is_solved) {
 }
 ```
 ### Simplification
+**A new representation:** A new class was added called `MetabolicPolytope` that stores a metabolic network in the form it naturally comes in, box bounds together with equality constraints, rather than as a single system of inequalities:
 
+$$P=\{x \in \mathbb{R}^d : Sx = 0,\; b_l \leq x \leq b_u\}$$
+
+The bounds are held as two vectors and the equalities as a matrix that is sparse and row-major by default, which suits the stoichiometric matrix of a genome scale model. The class is templated on the point type and on the matrix type, so the storage can be changed where a different one fits better.
+
+```c++
+template
+<
+    typename Point,
+    typename MT_Type = Eigen::SparseMatrix<typename Point::FT, Eigen::RowMajor>
+>
+class MetabolicPolytope;
+```
 
 ## Challenges
 **Working in a large codebase:** VolEsti is a template heavy library, and the LP oracles sit underneath almost everything in it. Understanding how a change would affect the other components of the library meant reading well beyond the files I was editing, since the polytope classes, the random walks and the volume algorithms all reach the oracles indirectly.
