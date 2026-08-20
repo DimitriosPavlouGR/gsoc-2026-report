@@ -30,9 +30,12 @@ whose points are the steady-state flux distributions of the network. Genome scal
 | [#XXX](https://github.com/GeomScale/volesti/pull/XXX) | Added scaling, and HiGHS replacing lpsolve across the LP oracles | Open |
 
 ## Summary of Contributions
+### Replacing lpsolve with HiGHS
+Every sampling and volume algorithm in VolEsti sits on top of a handful of linear programming oracles located in `include/lp_oracles`, which locate an interior point, test membership, and compute where a ray leaves a body, among others. All of them called lpsolve, a solver that is no longer maintained and that loses both speed and accuracy in high dimensions.
+
+The first step was the build system. lpsolve was removed and HiGHS.cmake was added following the pattern the other dependencies already used, so HiGHS is fetched and built on demand and no manual installation is needed, with the examples and tests linking it through `highs::highs` target.
 ### Simplification
 
-### LPSolve Removal
 
 ## Challenges
 **Working in a large codebase:** VolEsti is a template heavy library, and the LP oracles sit underneath almost everything in it. Understanding how a change would affect the other components of the library meant reading well beyond the files I was editing, since the polytope classes, the random walks and the volume algorithms all reach the oracles indirectly.
