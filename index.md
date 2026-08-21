@@ -128,7 +128,8 @@ config.verbosity = VerbosityLevel::Summary;
 auto res = simplify(P, config);
 ```
 
-**Scaling:** The numbers in a genome scale model do not share a magnitude. Flux bounds range from very large to very tiny values, and the stoichiometric coefficients have a spread of their own. A scaling stage was added to bring everything onto a comparable ground before the LPs are solved, which makes the tolerances meaningful.
+#### Scaling 
+The numbers in a genome scale model do not share a magnitude. Flux bounds range from very large to very tiny values, and the stoichiometric coefficients have a spread of their own. A scaling stage was added to bring everything onto a comparable ground before the LPs are solved, which makes the tolerances meaningful.
 
 A scaling is two strictly positive vectors, one factor per reaction and one per metabolite:
 
