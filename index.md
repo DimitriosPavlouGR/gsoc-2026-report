@@ -132,7 +132,7 @@ auto res = simplify(P, config);
 
 A scaling is two strictly positive vectors, one factor per reaction and one per metabolite:
 
-$$A^\ast_{ij} = \frac{A_{ij}}{r_i c_j}, \quad b^\ast_{eq,i} = \frac{b_{eq,i}}{r_i},\quad x^\ast _j = c_j x_j$$
+$$A^\ast_{ij} = \frac{A_{ij}}{r_i c_j}, \quad b^\ast_{eq,i} = \frac{b_{eq,i}}{r_i},\quad x^\ast _j = c_j x_j,\quad b^\ast_{l,j}=c_j b_{l,j},\quad b^\ast_{u,j}=c_j b_{u,j}$$
 ```c++
 Scaling<Point> s;
 auto Ps = scale(P, s, MaxBoundScaling{});
