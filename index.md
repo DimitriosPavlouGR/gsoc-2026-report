@@ -67,8 +67,9 @@ if (!res.is_solved) {
     // the polytopes do not intersect
 }
 ```
-### Simplification
-**A new representation:** A new class called `MetabolicPolytope` was added that stores a metabolic network in the form it naturally comes in, box bounds together with equality constraints, rather than as a single system of inequalities:
+### Metabolic Polytope Preprocessing
+#### Metabolic Polytope 
+A new class called `MetabolicPolytope` was added that stores a metabolic network in the form it naturally comes in, box bounds together with equality constraints, rather than as a single system of inequalities:
 
 $$P=\{x \in \mathbb{R}^d : Sx = 0,\; b_l \leq x \leq b_u\}$$
 
@@ -89,11 +90,13 @@ A metabolic network enters this form with $A_{eq} = S$ and $b_{eq} = 0$, the ste
 ```c++
 auto P = parse_from_json<Point>("e_coli_core.json");
 ```
-**Simplification:** Once a model is loaded it cannot be handed to VolEsti's sampling and volume approximation implementations directly. The equalities present in the stoichiometric matrix $A_{eq}$ coffine it to an affine subspace of $\mathbb{R}^d$, so it has not interior and zero volume in the ambient space, while VolEsti's implementations expect a full dimensional H-polytope. The models also often happen to be far more complex than they need to be, the steady state condition makes most of the inequalities redundant, which means that they are not facets of $P$ and only add rows to the system that the algorithms will keep checking. Furthermore, some reactions are constrained so tightly by the network that they cannot vary at all, and so are not free variables, but hidden equalities, reducing the actual dimension of the polytope even further.
+#### Simplification Overview
+Once a model is loaded it cannot be handed to VolEsti's sampling and volume approximation implementations directly. The equalities present in the stoichiometric matrix $A_{eq}$ coffine it to an affine subspace of $\mathbb{R}^d$, so it has not interior and zero volume in the ambient space, while VolEsti's implementations expect a full dimensional H-polytope. The models also often happen to be far more complex than they need to be, the steady state condition makes most of the inequalities redundant, which means that they are not facets of $P$ and only add rows to the system that the algorithms will keep checking. Furthermore, some reactions are constrained so tightly by the network that they cannot vary at all, and so are not free variables, but hidden equalities, reducing the actual dimension of the polytope even further.
 
 Both problems are addressed before transforming the polytope to a full dimensional polytope. Simplification relaxes the redundant bounds and moves the pinned reactions into $A_{eq}$, which shrinks the description of the polytope. Two algorithms have been implemented to simplify the polytopes, `exhaustive_simplification::simplify`, and `clarkson_simplification::simplify`.
 
-**Exhaustive simplification:** The first algorithm answers both questions by solving up to four LPs for every single reaction. For a reaction $k$ it maximizes $x_k$ over the polytope, then moves the upper bound outwards by one and maximizes again. If the optimum does not move, then it must be that some other bound holds back the maximum $x_k$ from increasing, thus the bound describes no facet, and it is relaxed to infinity. The lower bound is tested the same way with a minimization LP.
+#### Exhaustive Simplification 
+The first algorithm answers both questions by solving up to four LPs for every single reaction. For a reaction $k$ it maximizes $x_k$ over the polytope, then moves the upper bound outwards by one and maximizes again. If the optimum does not move, then it must be that some other bound holds back the maximum $x_k$ from increasing, thus the bound describes no facet, and it is relaxed to infinity. The lower bound is tested the same way with a minimization LP.
 
 The maximization and minimization LPs also answer the second question at no extra cost. If the two optimums are close within $\epsilon$, the reaction cannot vary and is pinned.
 
@@ -109,7 +112,8 @@ auto res = simplify(P, config);
 ```
 The drawback of this implementation is that every LP is solved against the whole model, and up to four per reaction LPs per pass are needed, which on a genome scale network is a lot of LP calls over a system with thousands of columns and rows.
 
-**Clarkson's simplification:** The second algorithm implemented tries to address the drawbacks of the first implementation, which is that every LP is solved against every bound even though almost none of them describe the facet. It keeps two sets: an essential set $I$ of bounds proved to be essential, i.e. facets, initially empty, and a set $J$ of bounds whose status is still unknown, initially holding every finite bound of the input. Every reaction of the model (column) starts free, so the LPs are solved against $A_{eq}$ and $I$ alone, and $I$ only ever contains genuine facets.
+#### Clarkson's Simplification 
+The second algorithm implemented tries to address the drawbacks of the first implementation, which is that every LP is solved against every bound even though almost none of them describe the facet. It keeps two sets: an essential set $I$ of bounds proved to be essential, i.e. facets, initially empty, and a set $J$ of bounds whose status is still unknown, initially holding every finite bound of the input. Every reaction of the model (column) starts free, so the LPs are solved against $A_{eq}$ and $I$ alone, and $I$ only ever contains genuine facets.
 
 Each iteration draws a bound from $J$ and asks the same question the exhaustive method asks, but against $I$ instead of the full polytope, and with a single LP call. The bound is applied to the model relaxed outwards and the reaction is optimized in its own direction. If the optimum lands within the original bound, then the facets already in $I$ already imply it, and the bound is deemed redundant and dropped. If the optimum $x^\ast$ lands outside the polytope, then the segment from an interior point $z$ of the polytope towards it must leave through a facet of the polytope. The ray $z+t(x^*-z)$ is tested against every box bound and the first facet hit is added to $I$.
 
