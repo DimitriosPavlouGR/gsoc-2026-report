@@ -128,11 +128,13 @@ config.verbosity = VerbosityLevel::Summary;
 auto res = simplify(P, config);
 ```
 
-**Scaling:** The numbers in a genome scale model do not share a magnitude
+**Scaling:** The numbers in a genome scale model do not share a magnitude. Flux bounds range from very large to very tiny values, and the stoichiometric coefficients have a spread of their own. A scaling stage was added to bring everything onto a comparable ground before the LPs are solved, which makes the tolerances meaningful.
 
 A scaling is two strictly positive vectors, one factor per reaction and one per metabolite:
 
 $$A^\ast_{ij} = \frac{A_{ij}}{r_i c_j}, \quad b^\ast_{eq,i} = \frac{b_{eq,i}}{r_i},\quad x^\ast _j = c_j x_j,\quad b^\ast_{l,j}=c_j b_{l,j},\quad b^\ast_{u,j}=c_j b_{u,j}$$
+
+This is a change of variables, so the structure of the polytope is mostly untouched and only the numerical values move. The choice of factors is left to a policy, a callable that takes the polytope and fills in the scaling vectors $row,col$.
 
 ```c++
 Scaling<Point> s;
@@ -140,6 +142,8 @@ auto Ps = scale(P, s, MaxBoundScaling{});
 
 auto x = scale_point<Point>(x_scaled, s, false); // back to original coordinates
 ```
+Two scalings have also been implemented, `MaxBoundScaling`, which divides each reaction by its largest finite bound and each metabolite row by its largest coefficient, sending both to $\pm 1$. `GMScaling` follows the geometric mean approach of `gmscale`, alternating column and row passes until the passes stop improving the factors.
+
 ## Challenges
 **Working in a large codebase:** VolEsti is a template heavy library, and the LP oracles sit underneath almost everything in it. Understanding how a change would affect the other components of the library meant reading well beyond the files I was editing, since the polytope classes, the random walks and the volume algorithms all reach the oracles indirectly.
 
