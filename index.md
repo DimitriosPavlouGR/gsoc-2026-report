@@ -38,11 +38,14 @@ Every sampling and volume algorithm in VolEsti sits on top of a handful of linea
 **Updating the oracles:** Each oracle builds a model, solves it, and reads back either the objective or the solution, so the migration was a rewrite of the model construction in HiGHS's API while preserving the behaviour of each one.
 
 | Oracle | Computes |
-|`ComputeChebychevBall` | the largest ball inscribed in an H-polytope |
+|--------|----------|
+|`compute_chebychev_ball` | the largest ball inscribed in an H-polytope |
+|`point_in_intersection` |a point common to two V-polytopes |
 |`memLP_Vpoly`, `memLP_Zonotope` | whether a point belongs to a V-polytope or a zonotope |
 |`intersect_line_Vpoly` | the point where a ray hits a V-polytope |
 |`intersect_double_line_Vpoly`, `intersect_line_zono` | both intersections of a line with a V-polytope or a zonotope |
-|`PointInIntersection` |a point common to two V-polytopes |
+|`is_contained_in`, `are_equal` | whether one metabolic polytope contains, or equals another|
+
 
 <br>
 **Configuring the solver:** Every oracle now takes an optional `LPOracleOptions`, a callable applied to the `Highs` instance before the model is built and solved, so a caller can set a time limit, a tolerance, choose a solver, or pick any other configuration without the oracle having to expose each option itself.
@@ -53,18 +56,19 @@ LPOracleOptions opts = [](Highs& highs) {
     highs.setOptionValue("solver", "simplex");
 };
 
-auto ball = ComputeChebychevBall<NT, Point>(A, b, opts);
+auto ball = compute_chebychev_ball<NT, Point>(A, b, opts);
 ```
 
-**Error handling:** The oracles returned their result directly, without additional information on whether the solve had succeeded. Each one now returns a named struct carrying the result together with that information, and where the distinction is meaningful an infeasible LP is reported as a fact about the geometry rather than as a failure.
-
+**Error handling:** The oracles returned their result directly, without additional information on whether the solve had succeeded. Each one now returns an `LPOracleResult<T>` struct, which carries the computed value together with a `solved` flag, so the value is only read once the solve is confirmed to be successful.
 ```cpp
-auto res = PointInIntersection<VT>(V1, V2, direction);
+auto res = point_in_intersection<VT>(V1, V2, direction);
 
-if (!res.is_solved) {
+if (!res.solved) {
     // the LP failed
-} else if (res.is_empty) {
+} else if (res.value.second) {
     // the polytopes do not intersect
+} else {
+    // res.value.first is a point in the intersection
 }
 ```
 ### Metabolic Polytope Preprocessing
