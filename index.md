@@ -46,8 +46,6 @@ Every sampling and volume algorithm in VolEsti sits on top of a handful of linea
 |`intersect_double_line_Vpoly`, `intersect_line_zono` | both intersections of a line with a V-polytope or a zonotope |
 |`is_contained_in`, `are_equal` | whether one metabolic polytope contains, or equals another|
 
-
-<br>
 **Configuring the solver:** Every oracle now takes an optional `LPOracleOptions`, a callable applied to the `Highs` instance before the model is built and solved, so a caller can set a time limit, a tolerance, choose a solver, or pick any other configuration without the oracle having to expose each option itself.
 
 ```cpp
