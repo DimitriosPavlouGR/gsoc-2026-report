@@ -102,6 +102,17 @@ The first algorithm answers both questions by solving up to four LPs for every s
 
 $$
     \begin{aligned}
+    \max_{x},\quad \min_{x} \quad & x_k \\
+    \text{s.t.} \quad
+    & Sx = 0, \\
+    & l_i \leq x_i \leq u_l \quad\\
+    \end{aligned}
+$$
+The same LPs also answer the second question at no additional cost. If $x_k^{\max}-x_k^{\min} \leq \varepsilon$, the reaction cannot vary within the feasible polytope and its therefore pinned.
+
+To test whether the upper bound $u_k$ is essential, the algorithm moves it outwards by one and solves the maximization problem again:
+$$
+    \begin{aligned}
     \max_{x} \quad & x_k \\
     \text{s.t.} \quad
     & Sx = 0, \\
@@ -109,9 +120,6 @@ $$
     & l_k \leq x_k \leq u_k+1
     \end{aligned}
 $$
-
- maximizes $x_k$ over the polytope, then moves the upper bound outwards by one and maximizes again. If the optimum does not move, then it must be that some other bound holds back the maximum $x_k$ from increasing, thus the bound describes no facet, and it is relaxed to infinity. The lower bound is tested the same way with a minimization LP.
-
 The maximization and minimization LPs also answer the second question at no extra cost. If the two optimums are close within $\epsilon$, the reaction cannot vary and is pinned.
 
 Relaxing a bound or fixing a reaction changes the polytope, therefore the remaining bounds are checked again, and can expose bounds that looked essential in previous iteration. The algorithm therefore sweeps the reactions repeatedly and stops on the first pass that changes nothing.
