@@ -7,3 +7,48 @@ p, li {
   text-align: justify;
   hyphens: auto;
 }
+
+/* Mobile layout fix */
+@media screen and (max-width: 720px) {
+  body {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .wrapper {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  section {
+    width: auto;
+    max-width: none;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+
+  #header {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  #main_content {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  img,
+  video,
+  iframe {
+    max-width: 100%;
+    height: auto;
+  }
+
+  pre {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+}
