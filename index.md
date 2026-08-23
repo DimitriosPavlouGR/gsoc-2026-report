@@ -102,10 +102,18 @@ The first algorithm answers both questions by solving up to four LPs for every s
 
 $$
     \begin{aligned}
-    \max_{x},\quad \min_{x} \quad & x_k \\
+    \max_{x} \quad & x_k \\
     \text{s.t.} \quad
     & Sx = 0, \\
-    & l_i \leq x_i \leq u_l \quad\\
+    & l \leq x \leq u \quad\\
+    \end{aligned}
+$$
+$$
+    \begin{aligned}
+    \min_{x} \quad & x_k \\
+    \text{s.t.} \quad
+    & Sx = 0, \\
+    & l \leq x \leq u \quad\\
     \end{aligned}
 $$
 
@@ -118,7 +126,7 @@ $$
     \max_{x} \quad & x_k \\
     \text{s.t.} \quad
     & Sx = 0, \\
-    & l_i \leq x_i \leq u_l \quad (i \neq k),\\
+    & l_i \leq x_i \leq u_k \quad (i \neq k),\\
     & l_k \leq x_k \leq u_k+1
     \end{aligned}
 $$
