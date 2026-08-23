@@ -143,6 +143,7 @@ ExhaustiveConfig config;
 ExhaustiveSimplifier f(P, config);
 MetabolicPolytope<Point> Ps = simplify(P, config).first;
 ```
+##### Advantages and Limitations
 **Pros:** The main advantage of `ExhaustiveSimplifier` is that it is robust to numerical issues. If a HiGHS LP fails for a particular bound, the algorithm can leave that bound unchanged and continue with the rest of the reactions. One problematic LP therefore does not necessarily stop the whole simplification process.
 
 **Cons:** The main disadvantage is that this method can be slow. Each iteration can require up to four LP solves per pass, and several passes may be needed. Many LPs are solved using most of the bounds of the original model, with all its variables and constraints. For a metabolic network with thousands of reactions and constraints, this leads to a very large number of large LP calls and makes the exhaustive approach expensive for larger models.
