@@ -112,6 +112,7 @@ $$
 The same LPs also answer the second question at no additional cost. If $x_k^{\max}-x_k^{\min} \leq \varepsilon$, the reaction cannot vary within the feasible polytope and its therefore pinned.
 
 To test whether the upper bound $u_k$ is essential, the algorithm moves it outwards by one and solves the maximization problem again:
+
 $$
     \begin{aligned}
     \max_{x} \quad & x_k \\
@@ -121,6 +122,7 @@ $$
     & l_k \leq x_k \leq u_k+1
     \end{aligned}
 $$
+
 The maximization and minimization LPs also answer the second question at no extra cost. If the two optimums are close within $\epsilon$, the reaction cannot vary and is pinned.
 
 Relaxing a bound or fixing a reaction changes the polytope, therefore the remaining bounds are checked again, and can expose bounds that looked essential in previous iteration. The algorithm therefore sweeps the reactions repeatedly and stops on the first pass that changes nothing.
