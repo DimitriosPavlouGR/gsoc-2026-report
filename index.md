@@ -100,11 +100,15 @@ Both problems are addressed before transforming the polytope to a full dimension
 #### Exhaustive Simplification 
 The first algorithm answers both questions by solving up to four LPs for every single reaction. For a reaction $(k)$, it first determines its maximum and minimum feasible flux by solving:
 
-$
+$$
     \begin{aligned}
-    x_k^{\max} = \max_{x} \quad & x_k
+    \max_{x} \quad & x_k \\
+    \text{s.t.} \quad
+    & Sx = 0, \\
+    & l_i \leq x_i \leq u_l \quad (i \neq k),\\
+    & l_k \leq x_k \leq u_k+1
     \end{aligned}
-$
+$$
 
  maximizes $x_k$ over the polytope, then moves the upper bound outwards by one and maximizes again. If the optimum does not move, then it must be that some other bound holds back the maximum $x_k$ from increasing, thus the bound describes no facet, and it is relaxed to infinity. The lower bound is tested the same way with a minimization LP.
 
