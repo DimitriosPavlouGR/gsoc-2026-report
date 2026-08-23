@@ -108,6 +108,7 @@ $$
     & l \leq x \leq u \quad\\
     \end{aligned}
 $$
+
 $$
     \begin{aligned}
     \min_{x} \quad & x_k \\
