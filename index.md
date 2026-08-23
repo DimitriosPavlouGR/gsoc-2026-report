@@ -132,9 +132,9 @@ $$
     \end{aligned}
 $$
 
-The maximization and minimization LPs also answer the second question at no extra cost. If the two optimums are close within $\epsilon$, the reaction cannot vary and is pinned.
+If the optimum does not increase, the original bound was not essential for the description of the polytope and can therefore be relaxed to $+\infty$. The lower bound can be tested simillary by relaxing $l_k$ to $l_k-1$ and solving a minimization LP. Thus, at most four LPs are required per reaction.
 
-Relaxing a bound or fixing a reaction changes the polytope, therefore the remaining bounds are checked again, and can expose bounds that looked essential in previous iteration. The algorithm therefore sweeps the reactions repeatedly and stops on the first pass that changes nothing.
+Fixing a reaction changes the feasible polytope, so the remaining bounds must be checked once again. A bound that appeared essential in an earlier iteration may become redundant after another constraint is removed. The algorithm therefore repeatedly goes over the reaction variables and terminates on the first complete pass where no bounds have been relaxed or a variable has been pinned.
 
 ```c++
 using namespace exhaustive_simplification;
