@@ -98,7 +98,15 @@ Once a model is loaded it cannot be handed to VolEsti's sampling and volume appr
 Both problems are addressed before transforming the polytope to a full dimensional polytope. Simplification relaxes the redundant bounds and moves the pinned reactions into $A_{eq}$, which shrinks the description of the polytope. Two algorithms have been implemented to simplify the polytopes, `ExhaustiveSimplifier`, and `ClarksonSimplifier`.
 
 #### Exhaustive Simplification 
-The first algorithm answers both questions by solving up to four LPs for every single reaction. For a reaction $k$ it maximizes $x_k$ over the polytope, then moves the upper bound outwards by one and maximizes again. If the optimum does not move, then it must be that some other bound holds back the maximum $x_k$ from increasing, thus the bound describes no facet, and it is relaxed to infinity. The lower bound is tested the same way with a minimization LP.
+The first algorithm answers both questions by solving up to four LPs for every single reaction. For a reaction $(k)$, it first determines its maximum and minimum feasible flux by solving:
+
+[
+    \begin{aligned}
+    x_k^{\max} = \max_{x} \quad & x_k
+    \end{aligned}
+]
+
+ maximizes $x_k$ over the polytope, then moves the upper bound outwards by one and maximizes again. If the optimum does not move, then it must be that some other bound holds back the maximum $x_k$ from increasing, thus the bound describes no facet, and it is relaxed to infinity. The lower bound is tested the same way with a minimization LP.
 
 The maximization and minimization LPs also answer the second question at no extra cost. If the two optimums are close within $\epsilon$, the reaction cannot vary and is pinned.
 
