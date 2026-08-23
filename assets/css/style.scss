@@ -8,47 +8,79 @@ p, li {
   hyphens: auto;
 }
 
-/* Mobile layout fix */
+/* =========================
+   Mobile Slate fix
+   ========================= */
+
 @media screen and (max-width: 720px) {
+
+  html,
   body {
     width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
     overflow-x: hidden;
   }
 
   .wrapper {
-    width: 100%;
-    max-width: 100%;
-    margin: 0;
-    padding: 0;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
-  section {
-    width: auto;
-    max-width: none;
-    margin: 0;
-    padding: 20px;
+  header {
+    width: 100% !important;
+    min-width: 0 !important;
     box-sizing: border-box;
   }
 
-  #header {
-    width: 100%;
+  section {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 20px !important;
     box-sizing: border-box;
   }
 
   #main_content {
-    width: 100%;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    margin: 0 !important;
     box-sizing: border-box;
   }
 
-  img,
-  video,
-  iframe {
+  /* Prevent Slate's header elements from forcing width */
+  header ul,
+  header li {
     max-width: 100%;
-    height: auto;
+    box-sizing: border-box;
   }
 
+  /* Images and other wide content */
+  img,
+  video,
+  iframe,
+  table {
+    max-width: 100%;
+  }
+
+  /* Code can scroll horizontally without widening the page */
   pre {
     max-width: 100%;
     overflow-x: auto;
+    box-sizing: border-box;
+  }
+
+  /* Long URLs / equations shouldn't push the viewport */
+  p,
+  li,
+  td,
+  th {
+    overflow-wrap: anywhere;
   }
 }
