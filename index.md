@@ -108,6 +108,7 @@ $$
     & l_i \leq x_i \leq u_l \quad\\
     \end{aligned}
 $$
+
 The same LPs also answer the second question at no additional cost. If $x_k^{\max}-x_k^{\min} \leq \varepsilon$, the reaction cannot vary within the feasible polytope and its therefore pinned.
 
 To test whether the upper bound $u_k$ is essential, the algorithm moves it outwards by one and solves the maximization problem again:
