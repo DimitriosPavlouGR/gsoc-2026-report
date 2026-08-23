@@ -144,9 +144,10 @@ ExhaustiveSimplifier f(P, config);
 MetabolicPolytope<Point> Ps = simplify(P, config).first;
 ```
 ##### Advantages and Limitations
-**Pros:** The main advantage of `ExhaustiveSimplifier` is that it is robust to numerical issues. If a HiGHS LP fails for a particular bound, the algorithm can leave that bound unchanged and continue with the rest of the reactions. One problematic LP therefore does not necessarily stop the whole simplification process.
 
-**Cons:** The main disadvantage is that this method can be slow. Each iteration can require up to four LP solves per pass, and several passes may be needed. Many LPs are solved using most of the bounds of the original model, with all its variables and constraints. For a metabolic network with thousands of reactions and constraints, this leads to a very large number of large LP calls and makes the exhaustive approach expensive for larger models.
+The main advantage of `ExhaustiveSimplifier` is that it is robust to numerical issues. If a HiGHS LP fails for a particular bound, the algorithm can leave that bound unchanged and continue with the rest of the reactions. One problematic LP therefore does not necessarily stop the whole simplification process.
+
+The main disadvantage is that this method can be slow. Each iteration can require up to four LP solves per pass, and several passes may be needed. Many LPs are solved using most of the bounds of the original model, with all its variables and constraints. For a metabolic network with thousands of reactions and constraints, this leads to a very large number of large LP calls and makes the exhaustive approach expensive for larger models.
 
 #### Clarkson's Simplification 
 The second algorithm implemented tries to address the drawbacks of the first implementation, which is that every LP is solved against every bound even though almost none of them describe the facet. It keeps two sets: an essential set $I$ of bounds proved to be essential, i.e. facets, initially empty, and a set $J$ of bounds whose status is still unknown, initially holding every finite bound of the input. Every reaction of the model (column) starts free, so the LPs are solved against $A_{eq}$ and $I$ alone, and $I$ only ever contains genuine facets.
