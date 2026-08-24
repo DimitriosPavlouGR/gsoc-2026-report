@@ -199,10 +199,21 @@ auto x = scale_point<Point>(x_scaled, s, false); // back to original coordinates
 Two scalings have also been implemented, `MaxBoundScaling`, which divides each reaction by its largest finite bound and each metabolite row by its largest coefficient, sending both to $\pm 1$. `GMScaling` follows the geometric mean approach of `gmscale`, alternating column and row passes until the passes stop improving the factors.
 
 ## Challenges
-**Working in a large codebase:** VolEsti is a template heavy library, and the LP oracles sit underneath almost everything in it. Understanding how a change would affect the other components of the library meant reading well beyond the files I was editing, since the polytope classes, the random walks and the volume algorithms all reach the oracles indirectly.
 
-**Replacing lpsolve:** The lpsolve calls were spread across the oracles with no abstraction, so the migration had to preserve the behaviour of each one exactly while changing the solver underneath.
+### Replacing LPSolve
+
+The lpsolve calls weren't confined to `include/lp_oracles`, they were reached indirectly by the polytope classes, the random walks, and then volume algorithms, so every oracle had to be traced carefully through its callers before I could touch it. In addition HiGHS.cmake had to follow the pattern VolEsti's other dependencies already used, and before converting anything I had to settle on the new signatures and implementations of the oracles.
+
+### Implementing Exhaustive & Clarkson 
+
+A bug in either algorithm doesn't crash the program, but it can quietly hand back incorrect polytopes, so I couldn't take that the code worked properly for granted even if it seemed correct. That meant implementing additional oracles
+for testing containment and equallity between different metabolic polytopes. The difficult part
+was telling apart three different types of failures, a real bug, a numerical decision made too close to the solver's own tolerance, and an LP that failed because the model was badly scaled, which is what motivated the scaling stage. Comparing the two algorithms fairly also meant judging them by the region they describe rather by raw counts of bounds relaxed or reactions pinned, since the same region can be reached through different operations with different counts.
+
+### Contributing to open source
+
+The code had to read as part of VolEsti, not bolted onto it, so I tried to match its conventions where they existed, e.g. (no namespaces) rather than doing things my way, and wrote plenty of tests to make sure everything worked properly.
 
 ## Acknowledgments
 
-I would like to thank my mentors for their guidance and support throughout GSoC 2026.
+I would like to thank my mentors Vissarion Fisikopoulos and Apostolos Chalkis for giving the opportunity to work on VolEsti and for their constant guidance and support throughout GSoC 2026.
