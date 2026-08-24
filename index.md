@@ -6,7 +6,7 @@ title: Overview
 
 **Contributor:** Dimitrios Pavlou<br>
 **Mentors:** Vissarion Fisikopoulos, Apostolos Chalkis<br>
-**Organization:** [Geomsacle](https://geomscale.github.io/about/)
+**Organization:** [Geomscale](https://geomscale.github.io/about/)
 
 [VolEsti](https://github.com/GeomScale/volesti) is a C++ library for volume approximation and sampling of convex bodies (e.g. polytopes) with an R interface.
 
@@ -25,8 +25,8 @@ whose points are the steady-state flux distributions of the network. Genome scal
 
 | PR | Description | Status |
 |----|-------------|--------|
-| [#493](https://github.com/GeomScale/volesti/pull/493) | Metabolic polytope representation, and exhaustive simplification | Closed|
-| [#499](https://github.com/GeomScale/volesti/pull/499) | Finished simplification, added Clarkson, BiGG parser, and exhaustive simplification | Merged |
+| [#493](https://github.com/GeomScale/volesti/pull/493) | Metabolic polytope representation, and exhaustive simplification | Closed |
+| [#499](https://github.com/GeomScale/volesti/pull/499) | Finished simplification, added Clarkson, BiGG parser, and exhaustive simplification | Open |
 | [#XXX](https://github.com/GeomScale/volesti/pull/XXX) | Added scaling, and HiGHS replacing lpsolve across the LP oracles | Open |
 
 ## Summary of Contributions
@@ -93,12 +93,12 @@ A metabolic network enters this form with $A_{eq} = S$ and $b_{eq} = 0$, the ste
 auto P = parse_from_json<Point>("e_coli_core.json");
 ```
 #### Simplification Overview
-Once a model is loaded it cannot be handed to VolEsti's sampling and volume approximation implementations directly. The equalities present in the stoichiometric matrix $A_{eq}$ coffine it to an affine subspace of $\mathbb{R}^d$, so it has no interior and zero volume in the ambient space, while VolEsti's implementations expect a full dimensional H-polytope. The models also often happen to be far more complex than they need to be, the steady state condition makes most of the inequalities redundant, which means that they are not facets of $P$ and only add rows to the system that the algorithms will keep checking. Furthermore, some reactions are constrained so tightly by the network that they cannot vary at all, and so are not free variables, but hidden equalities, reducing the actual dimension of the polytope even further.
+Once a model is loaded it cannot be handed to VolEsti's sampling and volume approximation implementations directly. The equalities present in the stoichiometric matrix $A_{eq}$ confine it to an affine subspace of $\mathbb{R}^d$, so it has no interior and zero volume in the ambient space, while VolEsti's implementations expect a full dimensional H-polytope. The models also often happen to be far more complex than they need to be, the steady state condition makes most of the inequalities redundant, which means that they are not facets of $P$ and only add rows to the system that the algorithms will keep checking. Furthermore, some reactions are constrained so tightly by the network that they cannot vary at all, and so are not free variables, but hidden equalities, reducing the actual dimension of the polytope even further.
 
 Both problems are addressed before transforming the polytope to a full dimensional polytope. Simplification relaxes the redundant bounds and moves the pinned reactions into $A_{eq}$, which shrinks the description of the polytope. Two algorithms have been implemented to simplify the polytopes, `ExhaustiveSimplifier`, and `ClarksonSimplifier`.
 
 #### Exhaustive Simplification 
-The first algorithm answers both questions by solving up to four LPs for every single reaction. For a reaction $(k)$, it first determines its maximum and minimum feasible flux by solving:
+The first algorithm answers both questions by solving up to four LPs for every single reaction. For a reaction $k$, it first determines its maximum and minimum feasible flux by solving:
 
 $$
     \begin{aligned}
@@ -118,7 +118,7 @@ $$
     \end{aligned}
 $$
 
-The same LPs also answer the second question at no additional cost. If $x_k^{\max}-x_k^{\min} \leq \varepsilon$, the reaction cannot vary within the feasible polytope and its therefore pinned.
+The same LPs also answer the second question at no additional cost. If $x_k^{\max}-x_k^{\min} \leq \varepsilon$, the reaction cannot vary within the feasible polytope and it's therefore pinned.
 
 To test whether the upper bound $u_k$ is essential, the algorithm moves it outwards by one and solves the maximization problem again:
 
@@ -137,11 +137,8 @@ If the optimum does not increase, the original bound was not essential for the d
 Fixing a reaction changes the feasible polytope, so the remaining bounds must be checked once again. A bound that appeared essential in an earlier iteration may become redundant after another constraint is removed. The algorithm therefore repeatedly goes over the reaction variables and terminates on the first complete pass where no bounds have been relaxed or a variable has been pinned.
 
 ```c++
-MetabolicPolytope<Point> P;
-...
-ExhaustiveConfig config;
-ExhaustiveSimplifier f(P, config);
-MetabolicPolytope<Point> Ps = simplify(P, config).first;
+ExhaustiveSimplifier<Point> f(P, config);
+auto [Ps, ok] = f.simplify();
 ```
 ##### Advantages and Limitations
 
@@ -150,7 +147,7 @@ The main advantage of `ExhaustiveSimplifier` is that it is robust to numerical i
 The main disadvantage is that this method can be slow. Each iteration can require up to four LP solves per pass, and several passes may be needed. Many LPs are solved using most of the bounds of the original model, with most of its variables and constraints. For a metabolic network with thousands of reactions and constraints, this leads to a very large number of large LP calls and makes the exhaustive approach expensive for larger models.
 
 #### Clarkson's Simplification 
-The second algorithm implemented tries to address the drawbacks of the exhaustive approach. Most bounds are not facets of the polytope, so solving an LP for every bound is wasteful. It keeps two sets of bounds, an essential set $I$, containing bounds that have been proved to define facets, and a set $J$, containing bounds whose status is still unknown. Initially $I$ is empty and $J$ contains all the constraints. All reactions start free, so the LPs only use the equality constraints $A_{eq} x = b_{eq} and the bounds I.
+The second algorithm implemented tries to address the drawbacks of the exhaustive approach. Most bounds are not facets of the polytope, so solving an LP for every bound is wasteful. It keeps two sets of bounds, an essential set $I$, containing bounds that have been proved to define facets, and a set $J$, containing bounds whose status is still unknown. Initially $I$ is empty and $J$ contains all the constraints. All reactions start free, so the LPs only use the equality constraints $A_{eq} x = b_{eq}$ and the bounds $I$.
 
 At each iteration, one bound is selected from $J$ and tested against the polytope described by $I$. The bound is relaxed and the corresponding reaction is optimized in the direction of the relaxed bound. If the optimum stays $\varepsilon$ within the original bound, then the bounds already in $I$ imply it, so the bound is redundant and can be removed. If the optimum lies outside the original polytope, the algorithm finds an essential constraint, i.e. a facet of
 the polytope that blocks this direction. Starting from an interior point $z$, it follows the ray:
@@ -168,11 +165,8 @@ Here, maximizing $y$ finds a point that is as far as possible from the finite bo
 Reaction pinning is also handled more efficiently. Instead of repeatedly checking every reaction, the implementation maintains a worklist and only requeues reactions that share an equality with the row corresponding to a reaction that was just fixed.
 
 ```c++
-MetabolicPolytope<Point> P;
-...
-ClarksonConfig config;
-ClarksonSimplifier f(P, config);
-MetabolicPolytope<Point> Ps = simplify(P, config).first;
+ClarksonSimplifier<Point> f(P, config);
+auto [Ps, ok] = f.simplify();
 ```
 
 ##### Advantages and Limitations
@@ -182,7 +176,7 @@ The main advantage is that LPs are solved against the much smaller set $I$ rathe
 The main disadvantage is that the method is more complex and relies on additional geometric and numerical operations, such as finding an interior point and determining which facet a ray intersects. This makes the implementation much more sensitive to numerical issues than the exhaustive approach.
 
 #### Scaling 
-The numbers in a genome scale model do not share a magnitude. Flux bounds range from very large to very tiny values, and the stoichiometric coefficients have a spread of their own. A scaling stage was added to bring everything onto a comparable ground before the LPs are solved, which makes the tolerances meaningful.
+The numbers in a genome scale model do not share a magnitude. Flux bounds range from very large to very tiny values, and the stoichiometric coefficients have a spread of their own. A scaling stage was added to bring everything onto a comparable scale before the LPs are solved, which makes the tolerances meaningful.
 
 A scaling is two strictly positive vectors, one factor per reaction and one per metabolite:
 
@@ -202,17 +196,15 @@ Two scalings have also been implemented, `MaxBoundScaling`, which divides each r
 
 ### Replacing LPSolve
 
-The lpsolve calls weren't confined to `include/lp_oracles`, they were reached indirectly by the polytope classes, the random walks, and then volume algorithms, so every oracle had to be traced carefully through its callers before I could touch it. In addition HiGHS.cmake had to follow the pattern VolEsti's other dependencies already used, and before converting anything I had to settle on the new signatures and implementations of the oracles.
+The lpsolve calls weren't confined to `include/lp_oracles`, they were reached indirectly by the polytope classes, the random walks, and the volume algorithms, so every oracle had to be traced carefully through its callers before I could touch it. In addition, HiGHS.cmake had to follow the pattern VolEsti's other dependencies already used, and before converting anything I had to settle on the new signatures and implementations of the oracles.
 
 ### Implementing Exhaustive & Clarkson 
 
-A bug in either algorithm doesn't crash the program, but it can quietly hand back incorrect polytopes, so I couldn't take that the code worked properly for granted even if it seemed correct. That meant implementing additional oracles
-for testing containment and equallity between different metabolic polytopes. The difficult part
-was telling apart three different types of failures, a real bug, a numerical decision made too close to the solver's own tolerance, and an LP that failed because the model was badly scaled, which is what motivated the scaling stage. Comparing the two algorithms fairly also meant judging them by the region they describe rather by raw counts of bounds relaxed or reactions pinned, since the same region can be reached through different operations with different counts.
+A bug in either algorithm doesn't crash the program, but it can quietly hand back incorrect polytopes, so I couldn't take for granted that the code worked properly, even if it seemed correct. That meant implementing additional oracles for testing containment and equality between different metabolic polytopes. The difficult part was telling apart three different types of failures, a real bug, a numerical decision made too close to the solver's own tolerance, and an LP that failed because the model was badly scaled, which is what motivated the scaling stage. Comparing the two algorithms fairly also meant judging them by the region they describe rather than by raw counts of bounds relaxed or reactions pinned, since the same region can be reached through different operations with different counts.
 
 ### Contributing to open source
 
-The code had to read as part of VolEsti, not as independent code, so I tried to match its conventions where they existed, e.g. (no namespaces) rather than doing things my way, and wrote plenty of tests to make sure everything worked properly.
+The code had to read as part of VolEsti, not as independent code, so I tried to match its conventions where they existed, (e.g. no namespaces) rather than doing things my way, and wrote plenty of tests to make sure everything worked properly.
 
 ## Acknowledgments
 
