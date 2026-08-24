@@ -152,22 +152,34 @@ The main disadvantage is that this method can be slow. Each iteration can requir
 #### Clarkson's Simplification 
 The second algorithm implemented tries to address the drawbacks of the exhaustive approach. Most bounds are not facets of the polytope, so solving an LP for every bound is wasteful. It keeps two sets of bounds, an essential set $I$, containing bounds that have been proved to define facets, and a set $J$, containing bounds whose status is still unknown. Initially $I$ is empty and $J$ contains all the constraints. All reactions start free, so the LPs only use the equality constraints $A_{eq} x = b_{eq} and the bounds I.
 
-Each iteration draws a bound from $J$ and asks the same question the exhaustive method asks, but against $I$ instead of the full polytope, and with a single LP call. The bound is applied to the model relaxed outwards and the reaction is optimized in its own direction. If the optimum lands within the original bound, then the facets already in $I$ already imply it, and the bound is deemed redundant and dropped. If the optimum $x^\ast$ lands outside the polytope, then the segment from an interior point $z$ of the polytope towards it must leave through a facet of the polytope. The ray $z+t(x^*-z)$ is tested against every box bound and the first facet hit is added to $I$.
+At each iteration, one bound is selected from $J$ and tested against the polytope described by $I$. The bound is relaxed and the corresponding reaction is optimized in the direction of the relaxed bound. If the optimum stays $\varepsilon$ within the original bound, then the bounds already in $I$ imply it, so the bound is redundant and can be removed. If the optimum lies outside the original polytope, the algorithm finds an essential constraint, i.e. a facet of
+the polytope that blocks this direction. Starting from an interior point $z$, it follows the ray:
+
+$$z+t(x^{\ast}-z)$$
+
+to the optimum $x^{\ast}$ of the LP solved and finds the first bound that the ray hits. This bound must be a facet of the polytope, so it is added to $I$. This allows the algorithm to discover only the constraints that are actually needed to describe the polytope.
 
 The interior point is found using the following LP:
 
 $$\max\ y \quad \text{s.t.} \quad A_{eq}x = b_{eq}, \; b_l+y \leq x \leq b_u-y,\;0 \leq y \leq 1$$
 
-Reaction pinning is also done differently here as well. Instead of going over all the reactions repeatedly, the implementation keeps a worklist and requeues only the reactions sharing an equality with the row that was just fixed.
+Here, maximizing $y$ finds a point that is as far as possible from the finite bounds, providing an interior point for the ray shooting step.
+
+Reaction pinning is also handled more efficiently. Instead of repeatedly checking every reaction, the implementation maintains a worklist and only requeues reactions that share an equality with the row corresponding to a reaction that was just fixed.
 
 ```c++
-using namespace clarkson_simplification;
-Config config;
-config.fix_dimensions = true;
-config.verbosity = VerbosityLevel::Summary;
-
-auto res = simplify(P, config);
+MetabolicPolytope<Point> P;
+...
+ClarksonConfig config;
+ClarksonSimplifier f(P, config);
+MetabolicPolytope<Point> Ps = simplify(P, config).first;
 ```
+
+##### Advantages and Limitations
+
+The main advantage is that LPs are solved against the much smaller set $I$ rather than against every bound in the original model. Since most bounds are usually redundant, this can greatly reduce the number of constraints and LP calls compared with the exhaustive approach.
+
+The main disadvantage is that the method is more complex and relies on additional geometric and numerical operations, such as finding an interior point and determining which facet a ray intersects. This makes the implementation much more sensitive to numerical issues than the exhaustive approach.
 
 #### Scaling 
 The numbers in a genome scale model do not share a magnitude. Flux bounds range from very large to very tiny values, and the stoichiometric coefficients have a spread of their own. A scaling stage was added to bring everything onto a comparable ground before the LPs are solved, which makes the tolerances meaningful.
