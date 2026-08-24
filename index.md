@@ -209,3 +209,160 @@ The code had to read as part of VolEsti, not as independent code, so I tried to 
 ## Acknowledgments
 
 I would like to thank my mentors Vissarion Fisikopoulos and Apostolos Chalkis for giving me the opportunity to work on VolEsti and for their constant guidance and support throughout GSoC 2026.
+
+## Overview
+
+This PR introduces metabolic polytope preprocessing and replaces the LP oracles from `lpsolve` to `HiGHS`.
+
+The changes can be broken down into two main parts:
+
+1. Metabolic polytope simplification, scaling, and transformation.
+2. Removal of `lpsolve` and moving the lp oracles to `HiGHS`.
+
+The goal is to make metabolic network models smaller and easier to process with VolEsti's existing algorithms, while also providing a more consistent and new LP backend.
+
+## Metabolic Polytope Preprocessing
+
+A new preprocessing pipeline has been added for metabolic polytopes obtained from metabolic network models.
+
+This pipeline includes:
+
+- BiGG JSON model parsing
+- Scaling of metabolic polytope
+- Detection and removal of redundant flux bounds and pinned reactions
+- Transformation of the simplified metabolic polytope to an H representation
+
+The preprocessing related files have been added under `preprocess/metabolic/` and is split into separate components for:
+
+- Transformation
+- Scaling
+- Exhaustive simplification
+- Clarkson simplification
+- Common metabolic polytope utilities
+
+### Simplification Methods
+
+Two simplification approaches have been implemented.
+
+#### Exhaustive Simplification
+
+The exhaustive approach checks the reactions/bounds individually and determines whether they can be removed while preserving the metabolic polytope. This provides a simple and reliable baseline and is very useful for smaller models, or for preprocessing degenerate polytopes, where numerical accuracy becomes an issue.
+
+#### Clarkson Simplification
+
+A Clarkson based redundancy removal method has also been implemented. The method maintains a smaller set of relevant constraints and uses a worklist to identify reactions that are pinned or redundant. This avoid repeatedly processing the complete set of constraints and is intended to scale better with larger models.
+
+#### Simplification Results
+
+Experiments on metabolic models from the BiGG database demonstrate that a significant amount of redundancy can be removed before applying any volume/sampling algorithms.
+
+The following is a table showing the performance of the two methods compared to polyround:
+
+| Model | PolyRound Time | Exhaustive Time | Clarkson Time | PolyRound Dims | Exhaustive Dims | Clarkson Dims | PolyRound Bounds | Exhaustive Bounds | Clarkson Bounds |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| e_coli_core | 0.357s | 0.066s | 0.029s | 4 | 8 | 8 | 154 | 154 | 154 |
+| iAB_RBC_283 | 2.569s | 0.921s | 0.364s | 0 | 16 | 16 | 750 | 750 | 750 |
+| iAM_Pc455 | 11.644s | 40.201s | 5.908s | 13 | 223 | 222 | 1758 | 1744 | 1746 |
+| iAT_PLT_636 | 12.610s | 6.185s | 4.486s | 0 | 0 | 0 | 1423 | 1422 | 1423 |
+| iCN900 | 14.096s | 5.196s | 2.023s | 266 | 926 | 926 | 2317 | 2317 | 2317 |
+| iEC042_1314 | 58.269s | 66.512s | 20.114s | 243 | 1070 | 1070 | 4640 | 4640 | 4510 |
+| iECBD_1354 | 71.474s | 63.937s | 19.532s | 258 | 1097 | 1097 | 4708 | 4708 | 4705 |
+| iECED1_1282 | 64.651s | 201.361s | 20.430s | 236 | 1062 | 1062 | 4622 | 4618 | 4618 |
+| iECIAI39_1322 | 62.529s | 80.231s | 20.156s | 257 | 1152 | 1152 | 4668 | 4668 | 4667 |
+| iECSF_1327 | 65.506s | 75.043s | 23.045s | 234 | 999 | 999 | 4658 | 4658 | 4656 |
+| iEK1008 | 15.072s | 11.725s | 4.048s | 53 | 333 | 333 | 2161 | 2160 | 2157 |
+| iEcolC_1368 | 66.083s | 74.748s | 20.740s | 257 | 1115 | 1115 | 4740 | 4736 | 4736 |
+| iJN746 | 9.734s | 9.285s | 6.051s | 66 | 347 | 402 | 1884 | 1633 | 1856 |
+| iND750 | 16.051s | 30.890s | 48.840s | 104 | 635 | 633 | 2259 | 2259 | 2257 |
+| iNF517 | 6.403s | 3.586s | 1.570s | 50 | 241 | 241 | 1309 | 1309 | 1307 |
+| iPC815 | 28.384s | 17.979s | 9.094s | 132 | 896 | 896 | 3481 | 3480 | 3480 |
+| iRC1080 | 49.089s | 67.473s | 22.539s | 72 | 622 | 622 | 3457 | 3457 | 3453 |
+| iSynCJ816 | 12.535s | 6.748s | 3.767s | 37 | 460 | 263 | 1864 | 1944 | 1865 |
+| iYO844 | 12.760s | 15.430s | 19.280s | 125 | 594 | 591 | 2278 | 2278 | 2278 |
+
+Overall, the Clarkson based approach generally provides a significant reduction in preprocessing time compared to Polyround and the Exhaustive approach, and there is room for further improvements.
+
+## LPSolve Removal
+
+The old `lp_solve` backend and its oracle implementations have been removed and replaced with a `HiGHS` implementation. The new oracles can be found under the folder `lp_oracles/`.
+
+The following were implemented with HiGHS:
+
+- Chebychev ball computation
+- V-polytope/Z-polytope membership
+- V-polytope/Z-polytope line/ray intersections
+- Metabolic polytope containment/equality checks
+
+### LP Oracle Interface
+
+The LP oracle interface (function signatures) has also been updated.
+
+A common `LPOracleOptions` interface is now provided for configuring HiGHS. This allows solver options to be configured without exposing the underlying HiGHS objects.
+
+The LP oracles also distinguish between:
+
+ - A successful LP solve with a feasible solution
+ - A successful LP solve proving infeasibility
+ - A solver failure or unexpected solver status
+ 
+This makes it possible for callers to distinguish scenarios such as "the point is outside the polytope" from "the LP solver failed".
+
+## Code Organization
+
+The relevant headers are organized as follows:
+
+```text
+include/
+├── convex_bodies/
+│   └── metabolic_polytope.hpp
+│
+├── io/
+│   └── bigg_parser.hpp
+│
+├── lp_oracles/
+│   ├── lp_oracle_options.hpp
+│   ├── metabolic_polyoracles.hpp
+│   ├── solve_lp.hpp
+│   ├── vpolyoracles.hpp
+│   └── zpolyoracles.hpp
+│
+└── preprocess/
+    └── metabolic/
+        ├── common.hpp
+        ├── scaling.hpp
+        ├── simplification_clarkson.hpp
+        ├── simplification_exhaustive.hpp
+        ├── simplify_and_transform.hpp
+        └── transformation.hpp
+```
+## Examples and Tests
+
+Relevant tests and examples are organized as follows:
+
+### Examples
+
+```text
+examples/
+└── metabolic_simplification/
+    ├── CMakeLists.txt
+    ├── simplification.cpp
+    └── manual_simplification.cpp
+```
+
+### Tests
+
+```text
+test/
+├── lp_oracles/
+│   ├── test_solve_lp.cpp
+│   ├── test_vpolyoracles.cpp
+│   └── test_zpolyoracles.cpp
+│
+└── metabolic/
+    ├── benchmark_simplification.cpp
+    ├── test_metabolic_polytope.cpp
+    ├── test_scaling.cpp
+    ├── test_simplification.cpp
+    └── test_transformation.cpp
+```
+
