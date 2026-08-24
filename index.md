@@ -216,4 +216,4 @@ The code had to read as part of VolEsti, not as independent code, so I tried to 
 
 ## Acknowledgments
 
-I would like to thank my mentors Vissarion Fisikopoulos and Apostolos Chalkis for giving the opportunity to work on VolEsti and for their constant guidance and support throughout GSoC 2026.
+I would like to thank my mentors Vissarion Fisikopoulos and Apostolos Chalkis for giving me the opportunity to work on VolEsti and for their constant guidance and support throughout GSoC 2026.
