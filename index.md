@@ -212,7 +212,7 @@ was telling apart three different types of failures, a real bug, a numerical dec
 
 ### Contributing to open source
 
-The code had to read as part of VolEsti, not bolted onto it, so I tried to match its conventions where they existed, e.g. (no namespaces) rather than doing things my way, and wrote plenty of tests to make sure everything worked properly.
+The code had to read as part of VolEsti, not as independent code, so I tried to match its conventions where they existed, e.g. (no namespaces) rather than doing things my way, and wrote plenty of tests to make sure everything worked properly.
 
 ## Acknowledgments
 
